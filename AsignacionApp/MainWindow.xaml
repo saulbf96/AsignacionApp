@@ -1,0 +1,148 @@
+﻿<Window x:Class="AsignacionApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AsignacionApp"
+        mc:Ignorable="d"
+        Title="Asignación Inbursa - Convertidor TXT a Excel / CSV"
+        Height="720" Width="980" MinHeight="600" MinWidth="820"
+        WindowStartupLocation="CenterScreen"
+        Background="#F3F5F8" FontFamily="Segoe UI" FontSize="13">
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#C5CCD6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            
+        </Style>
+        <Style x:Key="BotonPrincipal" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#1F4E78"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#1F4E78"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="22,8"/>
+        </Style>
+        <Style x:Key="Tarjeta" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#DDE2E8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="14"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+        <Style x:Key="Titulo" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#1F4E78"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="140"/>
+        </Grid.RowDefinitions>
+
+        <!-- Encabezado -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="Convertidor de TXT a Excel / CSV" FontSize="20" FontWeight="Bold" Foreground="#1F4E78"/>
+            <TextBlock Text=" en un solo archivo, sin columnas movidas, espacios sobrantes ni signos raros."
+                       Foreground="#5A6573"/>
+        </StackPanel>
+
+        <!-- 1. Archivos -->
+        <Border Grid.Row="1" Style="{StaticResource Tarjeta}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <DockPanel Grid.Row="0">
+                    <TextBlock x:Name="TxtResumenArchivos" DockPanel.Dock="Right" Text="0 archivos · 0.0 MB"
+                               Foreground="#5A6573" VerticalAlignment="Top"/>
+                    <TextBlock Text="Archivos a convertir" Style="{StaticResource Titulo}"/>
+                </DockPanel>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                    <Button x:Name="BtnAgregarCarpeta" Content="Agregar carpeta..."/>
+                    <Button x:Name="BtnAgregarArchivos" Content="Agregar archivos..."/>
+                    <Button x:Name="BtnQuitar" Content="Quitar seleccionados"/>
+                    <Button x:Name="BtnLimpiar" Content="Limpiar lista"/>
+                </StackPanel>
+                <ListView Grid.Row="2" x:Name="ListaArchivos" AllowDrop="True" SelectionMode="Extended" BorderBrush="#DDE2E8">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Archivo" Width="220" DisplayMemberBinding="{Binding Nombre}"/>
+                            <GridViewColumn Header="Registros" Width="90" DisplayMemberBinding="{Binding Registros}"/>
+                            <GridViewColumn Header="Tamaño" Width="90" DisplayMemberBinding="{Binding Tamano}"/>
+                            <GridViewColumn Header="Ruta" Width="480" DisplayMemberBinding="{Binding Ruta}"/>
+                            
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>
+        </Border>
+
+        <!-- 2. Opciones y 3. Salida -->
+        <Border Grid.Row="2" Style="{StaticResource Tarjeta}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                    <TextBlock Text="2. Opciones" Style="{StaticResource Titulo}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="Formato:" Width="70" VerticalAlignment="Center"/>
+                        <CheckBox x:Name="ChkExcel" Content="Excel (.xlsx)" IsChecked="True" Margin="0,0,16,0"/>
+                        <CheckBox x:Name="ChkCsv" Content="CSV (.csv)"/>
+                        
+                    </StackPanel>
+                    <CheckBox x:Name="ChkColumnaArchivo" Content="Agregar columna &quot;ArchivoOrigen&quot; con el nombre del TXT"/>
+                    <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Foreground="#5A6573" FontSize="12"
+                               Text="Al convertir, la información se valida y se limpia automáticamente."/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="3. Salida" Style="{StaticResource Titulo}"/>
+                    <TextBlock Text="Carpeta de salida:" Margin="0,0,0,3"/>
+                    <DockPanel Margin="0,0,0,8">
+                        <Button x:Name="BtnElegirSalida" DockPanel.Dock="Right" Content="..." Margin="6,0,0,0" Padding="10,3"/>
+                        <TextBox x:Name="TxtCarpetaSalida" Padding="4" VerticalContentAlignment="Center"/>
+                    </DockPanel>
+                    <TextBlock Text="Nombre del archivo:" Margin="0,0,0,3"/>
+                    <TextBox x:Name="TxtNombreArchivo" Text="ASIGNACION INBURSA GOTEO" Padding="4" Margin="0,0,0,8"/>
+                    <TextBlock Text="Nombre de la hoja de Excel:" Margin="0,0,0,3"/>
+                    <TextBox x:Name="TxtNombreHoja" Text="ASIGNACION" Padding="4" MaxLength="31"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Acciones -->
+        <Grid Grid.Row="3" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" x:Name="BtnConvertir" Content="Convertir" Style="{StaticResource BotonPrincipal}"/>
+            <ProgressBar Grid.Column="1" x:Name="Progreso" Height="10" Margin="4,0,12,0" Maximum="100" Foreground="#1F4E78"/>
+            <Button Grid.Column="2" x:Name="BtnAbrirCarpeta" Content="Abrir carpeta de salida" Margin="0"/>
+        </Grid>
+
+        <!-- Bitácora / reporte -->
+        <TextBox Grid.Row="4" x:Name="TxtLog" IsReadOnly="True" VerticalScrollBarVisibility="Auto"
+                 TextWrapping="Wrap" FontFamily="Consolas" FontSize="12" Background="White"
+                 BorderBrush="#DDE2E8" Padding="6"
+                 Text="Aquí aparecerá el reporte: registros leídos por archivo, líneas corregidas y total unido."/>
+    </Grid>
+</Window>
