@@ -4,9 +4,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AsignacionApp"
+        xmlns:vm="clr-namespace:AsignacionApp.ViewModels"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         Title="Asignación Inbursa - Convertidor TXT a Excel / CSV"
-        Height="720" Width="980" MinHeight="600" MinWidth="820"
+        Height="860" Width="1000" MinHeight="720" MinWidth="820"
         WindowStartupLocation="CenterScreen"
         Background="#F3F5F8" FontFamily="Segoe UI" FontSize="13">
 
@@ -43,12 +45,13 @@
     </Window.Resources>
 
     <Grid Margin="16">
+        <!-- La lista (3*) recibe la mayor parte del alto; el reporte (1*) el resto -->
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="3*" MinHeight="280"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="140"/>
+            <RowDefinition Height="*" MinHeight="90"/>
         </Grid.RowDefinitions>
 
         <!-- Encabezado -->
@@ -67,17 +70,32 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <DockPanel Grid.Row="0">
-                    <TextBlock x:Name="TxtResumenArchivos" DockPanel.Dock="Right" Text="0 archivos · 0.0 MB"
+                    <TextBlock x:Name="TxtResumenArchivos" DockPanel.Dock="Right" Text="{Binding Resumen}"
                                Foreground="#5A6573" VerticalAlignment="Top"/>
                     <TextBlock Text="Archivos a convertir" Style="{StaticResource Titulo}"/>
                 </DockPanel>
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
-                    <Button x:Name="BtnAgregarCarpeta" Content="Agregar carpeta..."/>
-                    <Button x:Name="BtnAgregarArchivos" Content="Agregar archivos..."/>
-                    <Button x:Name="BtnQuitar" Content="Quitar seleccionados"/>
-                    <Button x:Name="BtnLimpiar" Content="Limpiar lista"/>
+                    <Button Content="Agregar carpeta..."   Command="{Binding AgregarCarpetaCommand}"/>
+                    <Button Content="Agregar archivos..."  Command="{Binding AgregarArchivosCommand}"/>
+                    <Button Content="Quitar seleccionados" Command="{Binding QuitarCommand}"
+                            CommandParameter="{Binding SelectedItems, ElementName=ListaArchivos}"/>
+                    <Button Content="Limpiar lista"        Command="{Binding LimpiarCommand}"/>
                 </StackPanel>
-                <ListView Grid.Row="2" x:Name="ListaArchivos" AllowDrop="True" SelectionMode="Extended" BorderBrush="#DDE2E8">
+                <ListView Grid.Row="2" x:Name="ListaArchivos" ItemsSource="{Binding Archivos}"
+                          AllowDrop="True" SelectionMode="Extended" BorderBrush="#DDE2E8"
+                          AlternationCount="2"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          DragOver="ListaArchivos_DragOver" Drop="ListaArchivos_Drop">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="4,3"/>
+                            <Style.Triggers>
+                                <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                    <Setter Property="Background" Value="#F7F9FB"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListView.ItemContainerStyle>
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Archivo" Width="220" DisplayMemberBinding="{Binding Nombre}"/>
