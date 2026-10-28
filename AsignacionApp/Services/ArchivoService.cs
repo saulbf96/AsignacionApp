@@ -12,26 +12,33 @@ namespace AsignacionApp.Services
     public  class ArchivoService : IArchivoService
     {
 
-        public IEnumerable<string> ObtenerTxt(IEnumerable<string> rutas)
+        public IEnumerable<string> ObtenerTxt(IEnumerable<string> rutas) => Obtener(rutas, ".txt");
+
+        public IEnumerable<string> ObtenerZip(IEnumerable<string> rutas) => Obtener(rutas, ".zip");
+
+        // Regresa los archivos con esa extensión: los sueltos y los que estén dentro de una carpeta
+        private static IEnumerable<string> Obtener(IEnumerable<string> rutas, string extension)
         {
             foreach (var ruta in rutas)
             {
                 if(Directory.Exists(ruta))
                 {
-                    var txts= Directory.EnumerateFiles(ruta, "*.txt")
+                    var archivos = Directory.EnumerateFiles(ruta, "*" + extension)
                         .OrderBy(f => f, StringComparer.OrdinalIgnoreCase);
-                    foreach (var txt in txts)
-                        yield return txt;
+                    foreach (var archivo in archivos)
+                        yield return archivo;
 
                 }
-                else if (File.Exists(ruta) && Estxt(ruta))
+                else if (File.Exists(ruta) && TieneExtension(ruta, extension))
                 {
                     yield return ruta;
                 }
             }
         }
 
-        public Task<ArchivoTxt> LeerInfoAsync(string ruta) =>
+        
+
+        public Task<ArchivoTxt> LeerInfoAsync(string ruta, string? zip = null) =>
             //task run se hace para que no se congele en segundo plano 
 
             Task.Run(() =>
@@ -44,15 +51,18 @@ namespace AsignacionApp.Services
                     Ruta = ruta,
                     Nombre = info.Name,
                     Bytes = info.Length,
-                    Registros = Math.Max(lineas - 1, 0)
-
-
+                    Registros = Math.Max(lineas - 1, 0),
+                    Zip = zip
                 };
             });
 
 
-        private static bool Estxt(string ruta) =>
-            Path.GetExtension(ruta).Equals(".txt", StringComparison.OrdinalIgnoreCase);
+
+
+        private static bool TieneExtension(string ruta, string extension) =>
+            Path.GetExtension(ruta).Equals(extension, StringComparison.OrdinalIgnoreCase);
+
+
 
 
     }

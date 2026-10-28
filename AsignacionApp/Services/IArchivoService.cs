@@ -14,9 +14,12 @@ namespace AsignacionApp.Services
         //Convertir la ruta 
         IEnumerable<string> ObtenerTxt (IEnumerable<string> rutas);
 
-        //lee el tamaño y numero de registro del archivo txt. 
+        // Igual que ObtenerTxt pero para los .zip sueltos o dentro de una carpeta
+        IEnumerable<string> ObtenerZip(IEnumerable<string> rutas);
 
-        Task<ArchivoTxt> LeerInfoAsync(string ruta);
+        //lee el tamaño y numero de registro del archivo txt.
+        // zip: ruta del ZIP de donde se extrajo (null si es un TXT suelto)
+        Task<ArchivoTxt> LeerInfoAsync(string ruta, string? zip = null);
 
 
         
