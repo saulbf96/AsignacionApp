@@ -4,9 +4,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AsignacionApp"
+        xmlns:vm="clr-namespace:AsignacionApp.ViewModels"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         Title="Asignación Inbursa - Convertidor TXT a Excel / CSV"
-        Height="720" Width="980" MinHeight="600" MinWidth="820"
+        Height="860" Width="1000" MinHeight="600" MinWidth="820"
         WindowStartupLocation="CenterScreen"
         Background="#F3F5F8" FontFamily="Segoe UI" FontSize="13">
 
@@ -43,17 +45,17 @@
     </Window.Resources>
 
     <Grid Margin="16">
+        <!-- La lista de archivos (*) recibe todo el alto que sobra; la bitácora está en la ventana de reporte -->
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="*" MinHeight="150"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="140"/>
         </Grid.RowDefinitions>
 
         <!-- Encabezado -->
         <StackPanel Grid.Row="0" Margin="0,0,0,12">
-            <TextBlock Text="Convertidor de TXT a Excel / CSV" FontSize="20" FontWeight="Bold" Foreground="#1F4E78"/>
+            <TextBlock Text="Convertidor de TXT  a Excel / CSV con encabezados" FontSize="20" FontWeight="Bold" Foreground="#1F4E78"/>
             <TextBlock Text=" en un solo archivo, sin columnas movidas, espacios sobrantes ni signos raros."
                        Foreground="#5A6573"/>
         </StackPanel>
@@ -65,29 +67,69 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <DockPanel Grid.Row="0">
-                    <TextBlock x:Name="TxtResumenArchivos" DockPanel.Dock="Right" Text="0 archivos · 0.0 MB"
-                               Foreground="#5A6573" VerticalAlignment="Top"/>
-                    <TextBlock Text="Archivos a convertir" Style="{StaticResource Titulo}"/>
-                </DockPanel>
+                <TextBlock Grid.Row="0" Text="Archivos a convertir" Style="{StaticResource Titulo}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
-                    <Button x:Name="BtnAgregarCarpeta" Content="Agregar carpeta..."/>
-                    <Button x:Name="BtnAgregarArchivos" Content="Agregar archivos..."/>
-                    <Button x:Name="BtnQuitar" Content="Quitar seleccionados"/>
-                    <Button x:Name="BtnLimpiar" Content="Limpiar lista"/>
+                    <!-- Un solo botón: TXT, ZIP o carpeta completa -->
+                    <Button Content="Agregar..." Command="{Binding AgregarCommand}"
+                            ToolTip="Elige archivos TXT o ZIP, o entra a una carpeta y da Abrir para agregarla completa"/>
+                    <Button Content="Quitar seleccionados" Command="{Binding QuitarCommand}"
+                            CommandParameter="{Binding SelectedItems, ElementName=ListaArchivos}"/>
+                    <Button Content="Limpiar lista"        Command="{Binding LimpiarCommand}"/>
                 </StackPanel>
-                <ListView Grid.Row="2" x:Name="ListaArchivos" AllowDrop="True" SelectionMode="Extended" BorderBrush="#DDE2E8">
+                <ListView Grid.Row="2" x:Name="ListaArchivos" ItemsSource="{Binding Archivos}"
+                          AllowDrop="True" SelectionMode="Extended" BorderBrush="#DDE2E8"
+                          AlternationCount="2"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          DragOver="ListaArchivos_DragOver" Drop="ListaArchivos_Drop"
+                          SelectionChanged="ListaArchivos_SelectionChanged">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="4,3"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <!-- Plantilla propia: todas las filas seleccionadas se pintan del mismo azul,
+                                 tengan o no el foco (la de Windows pinta distinto la fila activa) -->
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListViewItem">
+                                        <Border x:Name="Fondo" Background="{TemplateBinding Background}"
+                                                Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                                            <GridViewRowPresenter VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Fondo" Property="Background" Value="#E5F1FB"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Fondo" Property="Background" Value="#CCE4F7"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                    <Setter Property="Background" Value="#F7F9FB"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListView.ItemContainerStyle>
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Archivo" Width="220" DisplayMemberBinding="{Binding Nombre}"/>
                             <GridViewColumn Header="Registros" Width="90" DisplayMemberBinding="{Binding Registros}"/>
                             <GridViewColumn Header="Tamaño" Width="90" DisplayMemberBinding="{Binding Tamano}"/>
-                            <GridViewColumn Header="Ruta" Width="480" DisplayMemberBinding="{Binding Ruta}"/>
+                            <GridViewColumn Header="Ruta" Width="480" DisplayMemberBinding="{Binding Ubicacion}"/>
                             
                         </GridView>
                     </ListView.View>
                 </ListView>
+
+                <!-- Total debajo de la tabla: se actualiza solo al agregar o quitar -->
+                <TextBlock Grid.Row="3" x:Name="TxtResumenArchivos" Text="{Binding Resumen}"
+                           HorizontalAlignment="Right" Margin="0,6,0,0"
+                           FontWeight="SemiBold" Foreground="#1F4E78"/>
             </Grid>
         </Border>
 
@@ -103,11 +145,11 @@
                     <TextBlock Text="2. Opciones" Style="{StaticResource Titulo}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                         <TextBlock Text="Formato:" Width="70" VerticalAlignment="Center"/>
-                        <CheckBox x:Name="ChkExcel" Content="Excel (.xlsx)" IsChecked="True" Margin="0,0,16,0"/>
-                        <CheckBox x:Name="ChkCsv" Content="CSV (.csv)"/>
+                        <CheckBox x:Name="ChkExcel" Content="Excel (.xlsx)" IsChecked="{Binding GenerarExcel}" Margin="0,0,16,0"/>
+                        <CheckBox x:Name="ChkCsv" Content="CSV (.csv)" IsChecked="{Binding GenerarCsv}"/>
                         
                     </StackPanel>
-                    <CheckBox x:Name="ChkColumnaArchivo" Content="Agregar columna &quot;ArchivoOrigen&quot; con el nombre del TXT"/>
+                    <CheckBox x:Name="ChkColumnaArchivo" IsChecked="{Binding AgregarColumnaArchivo}" Content="Agregar columna &quot;ArchivoOrigen&quot; con el nombre del TXT"/>
                     <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Foreground="#5A6573" FontSize="12"
                                Text="Al convertir, la información se valida y se limpia automáticamente."/>
                 </StackPanel>
@@ -116,13 +158,16 @@
                     <TextBlock Text="3. Salida" Style="{StaticResource Titulo}"/>
                     <TextBlock Text="Carpeta de salida:" Margin="0,0,0,3"/>
                     <DockPanel Margin="0,0,0,8">
-                        <Button x:Name="BtnElegirSalida" DockPanel.Dock="Right" Content="..." Margin="6,0,0,0" Padding="10,3"/>
-                        <TextBox x:Name="TxtCarpetaSalida" Padding="4" VerticalContentAlignment="Center"/>
+                        <Button x:Name="BtnElegirSalida" Command="{Binding ElegirSalidaCommand}" DockPanel.Dock="Right" Content="..." Margin="6,0,0,0" Padding="10,3"/>
+                        <TextBox x:Name="TxtCarpetaSalida" Text="{Binding CarpetaSalida, UpdateSourceTrigger=PropertyChanged}" Padding="4" VerticalContentAlignment="Center"/>
                     </DockPanel>
                     <TextBlock Text="Nombre del archivo:" Margin="0,0,0,3"/>
-                    <TextBox x:Name="TxtNombreArchivo" Text="ASIGNACION INBURSA GOTEO" Padding="4" Margin="0,0,0,8"/>
+                    <TextBox x:Name="TxtNombreArchivo" Text="{Binding NombreArchivo, UpdateSourceTrigger=PropertyChanged}" Padding="4" Margin="0,0,0,2"/>
+                    <!-- Vista previa: la fecha del día se agrega sola al final -->
+                    <TextBlock Margin="0,0,0,8" FontSize="12" Foreground="#5A6573" TextTrimming="CharacterEllipsis"
+                               Text="{Binding NombreFinal, StringFormat=Se guardará como: {0}}"/>
                     <TextBlock Text="Nombre de la hoja de Excel:" Margin="0,0,0,3"/>
-                    <TextBox x:Name="TxtNombreHoja" Text="ASIGNACION" Padding="4" MaxLength="31"/>
+                    <TextBox x:Name="TxtNombreHoja" Text="{Binding NombreHoja, UpdateSourceTrigger=PropertyChanged}" Padding="4" MaxLength="31"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -133,16 +178,15 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" x:Name="BtnConvertir" Content="Convertir" Style="{StaticResource BotonPrincipal}"/>
-            <ProgressBar Grid.Column="1" x:Name="Progreso" Height="10" Margin="4,0,12,0" Maximum="100" Foreground="#1F4E78"/>
-            <Button Grid.Column="2" x:Name="BtnAbrirCarpeta" Content="Abrir carpeta de salida" Margin="0"/>
+            <Button Grid.Column="0" x:Name="BtnConvertir" Command="{Binding ConvertirCommand}" Content="Convertir" Style="{StaticResource BotonPrincipal}"/>
+            <ProgressBar Grid.Column="1" x:Name="Progreso" Value="{Binding Progreso}" Height="10" Margin="4,0,12,0" Maximum="100" Foreground="#1F4E78"/>
+            <Button Grid.Column="2" x:Name="BtnVerReporte" Command="{Binding VerReporteCommand}" Content="Ver reporte"/>
+            <Button Grid.Column="3" x:Name="BtnAbrirCarpeta" Command="{Binding AbrirCarpetaCommand}" Content="Abrir carpeta de salida" Margin="0"/>
         </Grid>
-
-        <!-- Bitácora / reporte -->
-        <TextBox Grid.Row="4" x:Name="TxtLog" IsReadOnly="True" VerticalScrollBarVisibility="Auto"
-                 TextWrapping="Wrap" FontFamily="Consolas" FontSize="12" Background="White"
-                 BorderBrush="#DDE2E8" Padding="6"
-                 Text="Aquí aparecerá el reporte: registros leídos por archivo, líneas corregidas y total unido."/>
     </Grid>
 </Window>
+    
+    
+ 
